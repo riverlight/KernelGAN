@@ -1,4 +1,5 @@
 import torch
+import torch.nn as nn
 import loss
 import networks
 import torch.nn.functional as F
@@ -16,10 +17,19 @@ class KernelGAN:
     def __init__(self, conf):
         # Acquire configuration
         self.conf = conf
+        self._device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
         # Define the GAN
-        self.G = networks.Generator(conf).cuda()
-        self.D = networks.Discriminator(conf).cuda()
+        self.G = networks.Generator(conf)
+        self.D = networks.Discriminator(conf)
+
+        if torch.cuda.device_count() > 1:
+            print("Let's use", torch.cuda.device_count(), "GPUs!")
+            # dim = 0 [30, xxx] -> [10, ...], [10, ...], [10, ...] on 3 GPUs
+            self.G = nn.DataParallel(self.G)
+            self.D = nn.DataParallel(self.D)
+        self.G.to(self._device)
+        self.D.to(self._device)
 
         # Calculate D's input & output shape according to the shaving done by the networks
         self.d_input_shape = self.G.output_size
@@ -68,8 +78,8 @@ class KernelGAN:
         self.train_d()
 
     def set_input(self, g_input, d_input):
-        self.g_input = g_input.contiguous()
-        self.d_input = d_input.contiguous()
+        self.g_input = g_input.contiguous().to(self._device)
+        self.d_input = d_input.contiguous().to(self._device)
 
     def train_g(self):
         # Zeroize gradients

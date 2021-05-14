@@ -12,19 +12,11 @@ def train(conf):
     gan = KernelGAN(conf)
     learner = Learner()
     data = DataGenerator(conf, gan)
-    train_dataloader = DataLoader(dataset=data,
-                                  batch_size=8,
-                                  shuffle=True,
-                                  num_workers=8,
-                                  pin_memory=False,
-                                  drop_last=True)
 
     for iteration in tqdm.tqdm(range(conf.max_iters), ncols=60):
-        for i, t_data in enumerate(train_dataloader):
-            # [g_in, d_in] = data.__getitem__(iteration)
-            g_in, d_in = t_data
-            gan.train(g_in, d_in)
-            learner.update(iteration, gan)
+        [g_in, d_in] = data.__getitem__(iteration)
+        gan.train(g_in, d_in)
+        learner.update(iteration, gan)
     gan.finish()
 
 
@@ -44,7 +36,7 @@ def main():
     flag = False
     for filename in os.listdir(os.path.abspath(args.input_dir)):
         print(filename)
-        if filename == "0434.png":
+        if filename == "0557.png":
             flag = True
         if flag is False:
             continue

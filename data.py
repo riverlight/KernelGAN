@@ -2,6 +2,7 @@ import numpy as np
 from torch.utils.data import Dataset
 from imresize import imresize
 from util import read_image, create_gradient_map, im2tensor, create_probability_map, nn_interpolation
+import torch
 
 
 class DataGenerator(Dataset):
@@ -13,8 +14,12 @@ class DataGenerator(Dataset):
     def __init__(self, conf, gan):
         # Default shapes
         self.g_input_shape = conf.input_crop_size
-        self.d_input_shape = gan.G.output_size  # shape entering D downscaled by G
-        self.d_output_shape = self.d_input_shape - gan.D.forward_shave
+        if torch.cuda.device_count() > 1:
+            self.d_input_shape = gan.G.module.output_size  # shape entering D downscaled by G
+            self.d_output_shape = self.d_input_shape - gan.D.module.forward_shave
+        else:
+            self.d_input_shape = gan.G.output_size  # shape entering D downscaled by G
+            self.d_output_shape = self.d_input_shape - gan.D.forward_shave
 
         # Read input image
         self.input_image = read_image(conf.input_image_path) / 255.

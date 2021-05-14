@@ -38,8 +38,12 @@ class KernelGAN:
         self.D.to(self._device)
 
         # Calculate D's input & output shape according to the shaving done by the networks
-        self.d_input_shape = self.G.output_size
-        self.d_output_shape = self.d_input_shape - self.D.forward_shave
+        if torch.cuda.device_count() > 1:
+            self.d_input_shape = self.G.module.output_size
+            self.d_output_shape = self.d_input_shape - self.D.module.forward_shave
+        else:
+            self.d_input_shape = self.G.output_size
+            self.d_output_shape = self.d_input_shape - self.D.forward_shave
 
         # Input tensors
         self.g_input = torch.FloatTensor(1, 3, conf.input_crop_size, conf.input_crop_size).cuda()

@@ -5,6 +5,8 @@ import networks
 import torch.nn.functional as F
 from util import save_final_kernel, run_zssr, post_process_k
 import imresize
+import os
+
 
 class KernelGAN:
     # Constraint co-efficients
@@ -15,6 +17,8 @@ class KernelGAN:
     lambda_sparse = 0
 
     def __init__(self, conf):
+        os.environ['CUDA_VISIBLE_DEVICES'] = '0,1,2,3,4,5,6,7'
+
         # Acquire configuration
         self.conf = conf
         self._device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -25,9 +29,11 @@ class KernelGAN:
 
         if torch.cuda.device_count() > 1:
             print("Let's use", torch.cuda.device_count(), "GPUs!")
+            print("gpu num : ", torch.cuda.device_count())
             # dim = 0 [30, xxx] -> [10, ...], [10, ...], [10, ...] on 3 GPUs
             self.G = nn.DataParallel(self.G)
             self.D = nn.DataParallel(self.D)
+        print("haha, gpu num : ", torch.cuda.device_count())
         self.G.to(self._device)
         self.D.to(self._device)
 

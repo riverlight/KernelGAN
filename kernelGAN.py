@@ -78,8 +78,8 @@ class KernelGAN:
         self.train_d()
 
     def set_input(self, g_input, d_input):
-        self.g_input = g_input.contiguous().to(self._device)
-        self.d_input = d_input.contiguous().to(self._device)
+        self.g_input = g_input.contiguous()
+        self.d_input = d_input.contiguous()
 
     def train_g(self):
         # Zeroize gradients

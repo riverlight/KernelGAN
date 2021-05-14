@@ -5,16 +5,26 @@ from configs import Config
 from data import DataGenerator
 from kernelGAN import KernelGAN
 from learner import Learner
+from torch.utils.data.dataloader import DataLoader
 
 
 def train(conf):
     gan = KernelGAN(conf)
     learner = Learner()
     data = DataGenerator(conf, gan)
+    train_dataloader = DataLoader(dataset=data,
+                                  batch_size=8,
+                                  shuffle=True,
+                                  num_workers=8,
+                                  pin_memory=False,
+                                  drop_last=True)
+
     for iteration in tqdm.tqdm(range(conf.max_iters), ncols=60):
-        [g_in, d_in] = data.__getitem__(iteration)
-        gan.train(g_in, d_in)
-        learner.update(iteration, gan)
+        for i, t_data in enumerate(train_dataloader):
+            # [g_in, d_in] = data.__getitem__(iteration)
+            g_in, d_in = t_data
+            gan.train(g_in, d_in)
+            learner.update(iteration, gan)
     gan.finish()
 
 
